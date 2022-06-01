@@ -1,0 +1,6 @@
+
+h1{font-size:1.4em;text-align:center;}/*一级标题*/
+h2{font-size:1.24em;text-align:center;}/*二级标题*/
+.title{text-align:center;}/*文章名*/
+.note{font-size:0.8em;text-align:right;}/*章节信息*/
+body{}/*全局格式*/
