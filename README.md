@@ -10,7 +10,7 @@
 * python3
 
 # Install
-1.  go to the root dictionary.
+1.  go to the root dirctory.
 2.  install dependency package.  
 ```pip install -r requirements.txt```
 3. setup the config to what you want
