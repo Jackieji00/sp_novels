@@ -1,3 +1,5 @@
+# Description
+this application is designed to download novel from website.
 # To-do
 1. 添加制作epub格式
 2. 在requests开头添加header

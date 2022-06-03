@@ -31,7 +31,7 @@ class getInfo:
         self.lock_lst = _thread.allocate_lock()
         req.close()
 
-    def getContents(self,target,chapter,count):
+    def getContents(self,target,chapter,count,indexPage):
         #to get content in website
         while 1:
             try:
@@ -53,8 +53,7 @@ class getInfo:
                 d= lst[count]
                 if not chapter in d:
                     d[chapter]=[]
-                    d[chapter].append(texts)
-                else:
+                if texts not in d[chapter]:
                     d[chapter].append(texts)
                 self.lock_lst.release()
 
@@ -65,7 +64,7 @@ class getInfo:
                     # print(nextPg.get('href'))
                     link=config.DOMAIN+nextPg.get('href')
                     # print(link)
-                    self.getContents(link,chapter,count)
+                    self.getContents(link,chapter,count,indexPage+1)
                     break
                 else:
                     threadpool[id]=0
@@ -96,7 +95,7 @@ class getInfo:
             chapter = index.find('a')
             while self.threadwork>=config.THREADNUM:
                 pass
-            id = _thread.start_new_thread(self.getContents,(config.DOMAIN+chapter.get('href'),chapter.text,count))
+            id = _thread.start_new_thread(self.getContents,(config.DOMAIN+chapter.get('href'),chapter.text,count,0))
             count+=1
             threadpool[id]=1
             self.lock.acquire()
@@ -117,18 +116,21 @@ class getInfo:
                 os.mkdir(config.SAVE_ADDRESS+self.title)
             os.chdir(config.SAVE_ADDRESS+self.title)
             #把东西写进去
+            self.fdIndex = open('./'+self.title+"目录.txt",'a',encoding='utf-8')
             self.getIndex()
             while self.threadwork>0:
                 #print(self.threadwork)
                 pass
             print("爬完了,开始存入电脑")
             fd = open('./'+self.title+".txt",'a',encoding='utf-8')
+
             for dic in tqdm(lst):
                 keylst=list(dic.keys())
                 # print(keylst)
                 for key in keylst:
                     fd.write(key)
                     fd.write('\n\n')
+                    self.fdIndex.write(key)
                     v = dic[key]
                     for texts in v:
                         for text in texts:
@@ -137,5 +139,6 @@ class getInfo:
                             fd.write('\n')
                 fd.flush()
             fd.close()
+            self.fdIndex.close()
             print(self.title+"下载完成")
         pass
