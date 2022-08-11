@@ -18,10 +18,10 @@ this application is designed to download novel from website.
 3. setup the config to what you want
 4. run ``` python main.py```
 
-#支持网站
+# 支持网站
 * https://m.yushubo.com/
 * https://aishuge.la/
 * https://www.yinghuatxt.com/
 
-#使用方法
+# 使用方法
 进入main.py修改网址
