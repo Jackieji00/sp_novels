@@ -23,10 +23,21 @@ class getInfo:
         req.encoding = "utf-8"
         wholePage = req.text
         self.bs = BeautifulSoup(wholePage,'lxml')
-        self.title = self.bs.find(attrs={'property':'og:title'})['content']
-        self.description = self.bs.find(attrs={'property':'og:description'})['content']
-        self.auther = self.bs.find(attrs={'property':'og:novel:author'})['content']
-        self.cover_link = self.bs.find(attrs={'class':'lazy'})["src"]
+        if link.__contains__("m.yushubo.com"):
+            self.DOMAIN = "https://m.yushubo.com/"
+            self.title = self.bs.find(attrs={'property':'og:title'})['content']
+            self.description = self.bs.find(attrs={'property':'og:description'})['content']
+            self.auther = self.bs.find(attrs={'property':'og:novel:author'})['content']
+            self.cover_link = self.bs.find(attrs={'class':'lazy'})["src"]
+        elif link.__contains__("aishuge.la/"):
+            self.DOMAIN = "https://aishuge.la/"
+            self.title = self.bs.find(attrs={'property':'og:novel:book_name'})['content']
+            self.description = self.bs.find(attrs={'property':'og:description'})['content']
+            self.auther = self.bs.find(attrs={'property':'og:novel:author'})['content']
+            self.cover_link = self.bs.find(attrs={'id':'bookImg'}).contents[0]['src']
+        else:
+            print("link is not in the database")
+            return
         self.threadwork=0
         self.lock_lst = _thread.allocate_lock()
         req.close()
@@ -43,19 +54,35 @@ class getInfo:
                 req.encoding = "utf-8"
                 wholePage = req.text
                 bs = BeautifulSoup(wholePage,'lxml')
-                content = bs.find('content',id='readContent')
-                texts = bs.find_all('p')
-                # delete last tag
-                l = len(texts)
-                del texts[l-3:l]
-                # save to global value
-                self.lock_lst.acquire()
-                d= lst[count]
-                if not chapter in d:
-                    d[chapter]=[]
-                if texts not in d[chapter]:
-                    d[chapter].append(texts)
-                self.lock_lst.release()
+                if self.DOMAIN == "https://m.yushubo.com/":
+                    content = bs.find('content',id='readContent')
+                    texts = bs.find_all('p')
+                    # delete last tag
+                    l = len(texts)
+                    del texts[l-3:l]
+                    # save to global value
+                    self.lock_lst.acquire()
+                    d= lst[count]
+                    if not chapter in d:
+                        d[chapter]=[]
+                    if texts not in d[chapter]:
+                        d[chapter].append(texts)
+                    self.lock_lst.release()
+                elif self.DOMAIN == "https://aishuge.la/":
+                    content = bs.find('div',id='txt').contents
+                    len_content = len(content)-3
+                    texts = []
+                    for i in range(len_content):
+                        dd = bs.find(attrs={'data-id':str(i)}).contents
+                        texts+= dd
+                    # save to global value
+                    self.lock_lst.acquire()
+                    d= lst[count]
+                    if not chapter in d:
+                        d[chapter]=[]
+                    if texts not in d[chapter]:
+                        d[chapter].append(texts)
+                    self.lock_lst.release()
 
                 #针对1章分多页的情况
                 nextPg = bs.find("a",string="下一页")
@@ -84,7 +111,15 @@ class getInfo:
 
     def getIndex(self):
         # read index and get contents
-        index_container = self.bs.find_all("li",id='chapter')
+        index_container=[]
+        if self.DOMAIN == "https://m.yushubo.com/":
+            index_container = self.bs.find_all("li",id='chapter')
+        elif self.DOMAIN == "https://aishuge.la/":
+            cont_list= self.bs.find('ul',id='listsss')
+            len_con = len(cont_list.contents)
+            for i in range(len_con-3):
+                index=self.bs.find(attrs={'data-id':str(i)}).contents
+                index_container+=index
         count =0
         for i in range(len(index_container)):
             lst.append(dict())
@@ -95,7 +130,7 @@ class getInfo:
             chapter = index.find('a')
             while self.threadwork>=config.THREADNUM:
                 pass
-            id = _thread.start_new_thread(self.getContents,(config.DOMAIN+chapter.get('href'),chapter.text,count,0))
+            id = _thread.start_new_thread(self.getContents,(self.DOMAIN+chapter.get('href'),chapter.text,count,0))
             count+=1
             threadpool[id]=1
             self.lock.acquire()
