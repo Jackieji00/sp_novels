@@ -19,9 +19,9 @@ this application is designed to download novel from website.
 4. run ``` python main.py```
 
 #支持网站
-*https://m.yushubo.com/
-*https://aishuge.la/
-*https://www.yinghuatxt.com/
+* https://m.yushubo.com/
+* https://aishuge.la/
+* https://www.yinghuatxt.com/
 
 #使用方法
 进入main.py修改网址
